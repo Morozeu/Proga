@@ -1,0 +1,77 @@
+ //   собираем массив обектов из датасета  data.rows который к нам приходит из внутреннего хранилища
+      {%for item in data.rows%}  
+        var date = new Date('{{item[1]}}');
+         var formaterDate =  date.toLocaleDateString('ru', { month: 'long' })
+         dataArry.push({date:'{{item[1]}}', event_value: '{{item[2]}}', month: formaterDate[0].toUpperCase() + formaterDate.slice(1)});            
+      {%endfor%} 
+        
+       
+       // собираем массив uniqueYears с уникальными значениями для года через метод Array.from
+       const uniqueYears = Array.from(new Set(dataArry.map(item => new Date(item.date).getFullYear())));
+       // собираем массив с месяцами
+       const dateMonth = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+       // идем по циклу uniqueYears и внутри цикла проходимся еще по цыклу чтобы записать значения мериприятий к определенному месяцу
+       // далее фильтруем значения по месяцу через метод filter и собираем массив объектов monthData в котором у нас будут находится знчения по месяцам
+       // и далее создаем массив обектов dataEvent в котором объект year: это год, key: это месяц и event: в котором находится еще массив month: в котором находиться мероприятия и дата
+       uniqueYears.forEach(year => {
+         dateMonth.forEach(month => {
+           let monthData = dataArry.filter(item => item.month === month && new Date(item.date).getFullYear() === year);
+           dataEvent.push({ year: year, key: month, event: [{ month: monthData }] });
+         });
+       });  
+
+        let flexBoxCardMonth = document.querySelector('.flex-box-card-month'); 
+        
+         let flexZagolovokFilter = document.querySelector('.flex-zagolovok-filter');
+       
+       // выводим в консоль массив dataEvent чтобы убидится в правильности составления массива 
+       console.log(dataEvent);   
+       
+       
+       // функция для определения кол-во дней в текущем месяце
+       Date.prototype.daysInMonth = function() {
+         return 32 - new Date(this.getFullYear(), this.getMonth(), 32).getDate();
+       };        
+        
+       let dropdown = document.getElementById('dropdown');
+       let dropdownContent = document.getElementById('dropdown-content');
+       let dropdownName = document.getElementById('dropdown-name');
+       
+       // евент на нажатие фильтр года изменяем ему класс чтобы изменить верстку 
+       dropdown.addEventListener('click', function (event) {
+         dropdownContent.classList.toggle('dropdow-content-active')
+       })
+       
+       // проходимся по циклу dataEvent и создаем новый массив switcher чтобы вычленить уникальные значения года
+       dataEvent.forEach((element) => {
+         if (!switcher.includes(element.year)) {
+           switcher.push(element.year);
+         }
+       });
+       
+      // проходимся по циклу switcher чтобы вписать значения года в фильтр
+       switcher.forEach((swith) => {
+         let filterElement = document.createElement('p');
+         filterElement.classList.add('filter');
+         filterElement.innerHTML = swith;
+         dropdownContent.append(filterElement);
+       })
+      
+       // выводим в консоль массив switcher чтобы убидится в правильности составления массива 
+       console.log(switcher)    
+       
+       // записываем по умолчанию текущий год switcher[0] предварительно отсартировав данные из датасета data.rows
+       dropdownName.innerHTML = switcher[0];
+       
+       let filterDefoult = switcher[0];
+       
+       var filterElements = document.getElementsByClassName('filter'); 
+       
+       // делаем функцию для сортировки массива в котором я создаю елементы домДерева 
+       for (let filterEl of filterElements) {
+         filterEl.addEventListener('click', function(event) {           
+           dropdownName.innerHTML = filterEl.textContent;
+           let filterNew = filterEl.textContent;
+      createEvent(dataEvent, filterNew);
+         })
+       }
